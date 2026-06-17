@@ -496,6 +496,16 @@ with app.app_context():
     db.drop_all()
     db.create_all()
 
+from sqlalchemy import text
+
+with app.app_context():
+    db.create_all()
+    try:
+        db.session.execute(text("ALTER TABLE task ADD COLUMN category VARCHAR(50) DEFAULT 'General'"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 if __name__ == "__main__":
     app.run(debug=True)
 
