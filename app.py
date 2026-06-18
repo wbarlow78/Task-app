@@ -3,8 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 from datetime import date, timedelta
-from sqlalchemy import case
-from sqlalchemy import text
+from sqlalchemy import case, text
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -53,6 +52,19 @@ class Task(db.Model):
     priority = db.Column(db.String(20), default="Medium")
     notes = db.Column(db.Text)
     category = db.Column(db.String(50), default="General")
+
+with app.app_context():
+    db.create_all()
+
+    try:
+        db.session.execute(text(
+            "ALTER TABLE task ADD COLUMN category VARCHAR(50) DEFAULT 'General'"
+        ))
+        db.session.commit()
+        print("CATEGORY COLUMN ADDED")
+    except Exception as e:
+        db.session.rollback()
+        print("CATEGORY COLUMN CHECK:", e)
 
 def uid():
     return current_user.id.strip().lower()
@@ -496,16 +508,6 @@ def edit_task(task_id):
 with app.app_context():
     db.drop_all()
     db.create_all()
-
-from sqlalchemy import text
-
-with app.app_context():
-    db.create_all()
-    try:
-        db.session.execute(text("ALTER TABLE task ADD COLUMN category VARCHAR(50) DEFAULT 'General'"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
 
 if __name__ == "__main__":
     app.run(debug=True)
